@@ -1,34 +1,21 @@
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
+import { faker } from '@faker-js/faker';
 
 const SALT_ROUNDS = 10;
-
-const firstNames = ['Liam','Emma','Noah','Olivia','Ava','Isabella','Sophia','Mason','Lucas','Mia'];
-const lastNames = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Martinez','Lopez'];
-const petNames = ['Buddy','Max','Bella','Charlie','Luna','Lucy','Cooper','Rocky','Daisy','Bailey'];
-const species = ['dog','cat','rabbit','parrot','hamster','turtle'];
-
-const generateObjectId = () => new mongoose.Types.ObjectId();
-
-const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
 
 export async function generateUsers(count = 50) {
     const hashed = await bcrypt.hash('coder123', SALT_ROUNDS);
     const users = [];
 
     for (let i = 0; i < count; i++) {
-        const fn = pick(firstNames);
-        const ln = pick(lastNames);
-        const role = Math.random() < 0.1 ? 'admin' : 'user';
-        const email = `user${Date.now().toString().slice(-4)}_${i}@mocks.com`;
-
         users.push({
-            _id: generateObjectId(),
-            first_name: fn,
-            last_name: ln,
-            email,
+            _id: new mongoose.Types.ObjectId(),
+            first_name: faker.person.firstName(),
+            last_name: faker.person.lastName(),
+            email: faker.internet.email(),
             password: hashed,
-            role,
+            role: faker.helpers.arrayElement(['user', 'admin']),
             pets: []
         });
     }
@@ -38,25 +25,23 @@ export async function generateUsers(count = 50) {
 
 export function generatePets(count = 20, owners = []){
     const pets = [];
+    const petSpecies = ['dog', 'cat', 'rabbit', 'parrot', 'hamster', 'turtle'];
 
-    for(let i=0;i<count;i++){
-        const name = pick(petNames) + `_${i}`;
-        const specie = pick(species);
-        const owner = owners.length ? owners[Math.floor(Math.random()*owners.length)]._id : undefined;
-
+    for(let i = 0; i < count; i++){
         pets.push({
-            _id: generateObjectId(),
-            name,
-            specie,
-            birthDate: new Date(Date.now() - Math.floor(Math.random()*3*365*24*3600*1000)),
+            _id: new mongoose.Types.ObjectId(),
+            name: faker.animal.dog(),
+            specie: faker.helpers.arrayElement(petSpecies),
+            birthDate: faker.date.past({ years: 3 }),
             adopted: false,
-            owner,
+            owner: owners.length > 0 ? owners[Math.floor(Math.random() * owners.length)]._id : undefined,
             image: ''
         });
     }
 
     return pets;
 }
+
 
 export default {
     generateUsers,
